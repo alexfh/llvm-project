@@ -5994,17 +5994,12 @@ void CodeGenModule::EmitExternalDeclaration(const DeclaratorDecl *D) {
       return;
   }
   if (const auto *VD = dyn_cast<VarDecl>(D)) {
-    if (auto *GV = dyn_cast<llvm::GlobalVariable>(Addr))
-      DI->EmitExternalVariable(GV, VD);
-    else
-      llvm_unreachable("Unexpected address for external variable");
+    DI->EmitExternalVariable(
+        cast<llvm::GlobalVariable>(Addr->stripPointerCasts()), VD);
   } else if (const auto *FD = dyn_cast<FunctionDecl>(D)) {
-    if (auto *Fn = dyn_cast<llvm::Function>(Addr)) {
-      if (!Fn->getSubprogram())
-        DI->EmitFunctionDecl(GD, FD->getLocation(), FD->getType(), Fn);
-    } else {
-      llvm_unreachable("Unexpected address for external function");
-    }
+    llvm::Function *Fn = cast<llvm::Function>(Addr);
+    if (!Fn->getSubprogram())
+      DI->EmitFunctionDecl(GD, FD->getLocation(), FD->getType(), Fn);
   }
 }
 
